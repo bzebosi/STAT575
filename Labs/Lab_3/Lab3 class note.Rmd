@@ -1,0 +1,129 @@
+---
+title: "STAT547_LAB_3"
+author: "Zebosi Brian"
+date: "9/9/2021"
+output: pdf_document
+---
+
+## STAT547: Lab_3 Plotting Multivariate Data
+
+## Lab3 Purpose 
+
+•	To learn how to produce plots of multivariate data, both static and interactive.
+
+•	Practice describing the patterns and relationships observed in the multivariate plots.
+
+
+## Music Clips Data
+The music clips data is posted in music-plusnew-sub.csv. The data file has five quantitative variables contining audio information from 62 songs. The first two columns (Artist, Type) describe the artist and type of music. The raw data come from a time series for the sound produced by each music clip (track). For each time series the variance of amplitude, average amplitude, maximum amplitude, and two additional variables calculated from the spectral decomposition of the time series are calculated. The Type variable classifies the tracks as either Rock, Classical or New Wave, and there are 5 tracks that are not identified.
+Read the data into a data frame, indicating that the row names are in column 1 of the data file and that column is not a variable. The stringAsFactors=FALSE option prevents the first column from being converted to a factor.
+
+
+Obtain information on the dimensions of the data frame. Also list the column names. List the first six columns of data.
+```{r}
+setwd("D:/lecture_notes/STAT_575_Multivariate_Data_Analysis_BZ/Labs/Lab_3")
+music <- read.csv("music-plusnew-sub.csv", row.names = 1, stringsAsFactors = FALSE)
+colnames(music)
+dim(music)
+str(music)
+```
+
+Compute summary statistics
+
+```{r}
+summary(music)
+```
+
+Compute a table of counts for each type of music.
+
+```{r}
+table(music$Type)
+```
+
+
+Compute a table of counts for each artist
+
+```{r}
+table(music$Artist)
+```
+## Bodyfat data
+```{r}
+bodyfat <- read.csv("bodyfat.csv")
+dim(bodyfat)
+head(bodyfat)
+str(bodyfat)
+summary(bodyfat)
+```
+
+## PISA Data
+```{r}
+pisamath <- read.csv("pisamathmeans.csv")
+dim(pisamath)
+head(pisamath)
+str(pisamath)
+summary(pisamath)
+```
+
+## Exercise 1
+```{r}
+library(ggplot2)
+library(GGally)
+music.sub <- subset(music, Type == "Rock" | Type == "Classical")
+
+# Histogram
+# Short version
+qplot(LAve, data = music.sub, geom = "histogram", binwidth = 10) +
+  facet_wrap(~ Type, ncol = 1)
+
+# Full version
+ggplot(music.sub, aes(x = LAve)) +
+  geom_histogram(binwidth = 10) +
+  facet_wrap(~ Type, ncol = 1)
+
+# Parallel coordinate plot
+music.sub2 <- subset(music, Type == "Rock" | Type == "Classical" | Type == "New wave")
+ggparcoord(music.sub2, columns = 3:7, groupColumn = "Type",
+           title = "Parallel Coordinate Plot: Music Types")
+ggparcoord(music.sub2, columns = c(4, 3, 5, 6, 7), groupColumn = "Type",
+           title = "Parallel Coordinate Plot: Music Types")
+ggparcoord(music, columns = c(4, 3, 5, 6, 7), groupColumn = "Type", missing = "exclude",
+           title = "Parallel Coordinate Plot: Music Types")
+```
+
+(a)
+
+(b)
+
+(c)
+
+## Exercise 2
+```{r}
+# Scatterplot matrix
+ggpairs(bodyfat[, 1:4])
+bf.sub <- subset(bodyfat, Heightinches > 60 & Weightlbs < 300)
+
+# Parallel coordinate plot
+ggparcoord(bf.sub, 5:14)
+summary(bf.sub$AnkleCircm)
+sort(bf.sub$AnkleCircm)
+bf.sub[bf.sub$AnkleCircm > 33, ]
+```
+
+(a)
+
+(b)
+
+(c)
+
+(d)
+
+## Exercise 3
+```{r}
+# Scatterplot matrix
+pisamath2 <- subset(pisamath, !is.na(acc))
+ggpairs(pisamath2, mapping = aes(color = Gender, alpha = 0.5))
+```
+
+(a)
+
+(b)

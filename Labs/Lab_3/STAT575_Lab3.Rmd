@@ -1,0 +1,243 @@
+---
+title: "Lab Report 3"
+author: "Juan Panelo, Brian Zebosi, Matheus Dalsente Krause"
+date: "9/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)  
+```
+## STAT547: Lab3 Plotting Multivariate Data
+
+## Objectives 
+
+•	To learn how to produce plots of multivariate data, both static and interactive.
+
+•	Practice describing the patterns and relationships observed in the multivariate plots.
+
+```{r}
+library(ggplot2)
+library(GGally)
+```
+
+
+
+## Question_1
+
+
+## Music Clips Data
+The music clips data is posted in music-plusnew-sub.csv. The data file has five quantitative variables contining audio information from 62 songs. The first two columns (Artist, Type) describe the artist and type of music. The raw data come from a time series for the sound produced by each music clip (track). For each time series the variance of amplitude, average amplitude, maximum amplitude, and two additional variables calculated from the spectral decomposition of the time series are calculated. The Type variable classifies the tracks as either Rock, Classical or New Wave, and there are 5 tracks that are not identified.
+Read the data into a data frame, indicating that the row names are in column 1 of the data file and that column is not a variable. The stringAsFactors=FALSE option prevents the first column from being converted to a factor.
+
+
+Obtain information on the dimensions of the data frame. Also list the column names. List the first six columns of data.
+```{r}
+setwd("D:/lecture_notes/STAT_575_Multivariate_Data_Analysis_BZ/Labs/Lab_3")
+music <- read.csv("music-plusnew-sub.csv", row.names = 1, stringsAsFactors = FALSE)
+colnames(music)
+dim(music)
+str(music)
+```
+
+Compute summary statistics
+
+```{r}
+summary(music)
+```
+
+Compute a table of counts for each type of music. [Hint: Generate frequency table]
+
+```{r}
+table(music$Type)
+```
+
+
+Compute a table of counts for each artist. [Hint: Generate frequency table]
+
+```{r}
+table(music$Artist)
+```
+
+
+## Exercise 1 Music clips data:
+
+
+
+
+## Exercise 1
+
+This exercise uses the qplot function in the ggplot2 package to make a panel of histograms and a scatterplot. 
+First select a subset of the data that contains only classical and rock music.
+
+a). For classical and rock music make histograms for the avergae amplitude variable (LAve) facetted by Type. 
+Set the binwidth to units of 10. How do the distributions of average amplitude values differ between classical and rock music?
+
+```{r}
+library(ggplot2)
+library(GGally)
+music.sub <- subset(music, Type == "Rock" | Type == "Classical")
+
+# Histogram
+# Short version
+#qplot(LAve, data = music.sub, geom = "histogram", binwidth = 10) +
+  #facet_wrap(~ Type, ncol = 1)
+
+# Full version
+ggplot(music.sub, aes(x = LAve)) +
+  geom_histogram(binwidth = 10) +
+  facet_wrap(~ Type, ncol = 1)
+
+```
+
+(a) classical music average amplitude values are unimodal , more spread out (more variation) and right skewed. 
+    Rock music is bimodal, less spread out and left skewed. 
+
+b). 
+
+Make a scatterplot of LVar vs LAve, with points colored by the type of music. Describe differences between the patterns of the points on the plot corresponding to Rock and Classical music.
+
+
+```{r}
+
+ggplot(music.sub, aes(x=LVar, y = LAve, color=Type)) +
+  geom_point()
+
+```
+
+(b) Classical music large variance and small average, while 
+    Rock music has small variance and large average. Rock music is divided in two groups. 
+    
+
+(c)
+
+```{r}
+music.sub2 <- subset(music, Type == "Rock" | Type == "Classical" | Type=="New wave")
+ggparcoord(music.sub2, columns=3:7, groupColumn="Type", 
+             title="Parallel Coordinate Plot: Music Types")
+
+```
+
+Rock: large variance, max and energy, lower frequency. 
+      Rock music can be sub-divided in two groups (types).
+      
+      
+Classical : large average, frequency but small variance, max and energy. 
+
+
+New wave  : small average, variance, max, energy and frequeny 
+
+
+## Bodyfat data
+
+The body fat data bodyfat.csv contains various measurements on 14 variables for 252 typical American males.
+
+Obtain information on the dimensions of the data frame. Also list the column names. List the first six columns of data.
+
+```{r}
+bodyfat <- read.csv("bodyfat.csv")
+dim(bodyfat)
+colnames(bodyfat)
+str(bodyfat)
+head(bodyfat)
+```
+
+Compute summary statistics
+
+```{r}
+summary(bodyfat)
+```
+
+## Exercise 2 Body fat data: Using GGally.
+
+1.	Make a scatterplot matrix of the first four variables, % Body Fat, Age, Weight and Height. There's a problem with the data. What is it?
+
+```{r}
+ggpairs(bodyfat, columns = 1:4)
+```
+ 
+ There 2 outliers 
+ 
+2.	Fix the problem with the data and remake the scatterplot matrix. Describe the association between the variables.
+ 
+```{r}
+bf.sub <- subset(bodyfat, Heightinches > 60 & Weightlbs < 300)
+ggpairs(bf.sub, columns = 1:4)
+```
+ 
+There is moderete positive relationship between weight and body fat, weight and height.
+There no obvious relationship between the other variables. 
+
+
+3.	Make a parallel coordinate plot of the last 10 variables, the circumference variables. There are some outliers in these measurements. 
+    Explain the ones that you see.
+
+```{r}
+# Parallel coordinate plot
+ggparcoord(bf.sub, 5:14)
+
+```
+
+There are two outliers which have large angle circumference
+
+
+4.	Remove the outliers and remake the parallel coordinate plot. Describe the structure of the data.
+
+```{r}
+bf.sub2 <- subset(bf.sub, AnkleCircm < 33)
+ggparcoord(bf.sub2, 5:14)
+
+```
+
+
+All variables bounce aronnd their centers and there 
+
+
+
+## Question_3
+
+## PISA Data
+
+Mathematics test scores for 15 year olds. Only the USA measurements are examined. These are the scores for the different types of math skills.
+
+
+```{r}
+pisamath <- read.csv("pisamathmeans.csv")
+dim(pisamath)
+head(pisamath)
+colnames(pisamath)
+str(pisamath)
+```
+
+Compute summary statistics
+```{r}
+summary(pisamath)
+```
+
+
+
+## Exercise 3 PISA Maths scores
+
+
+1.	How many missing values for variable acc? Remove the missing values in the data. 
+```{r}
+summary(pisamath$acc)
+```
+There are 4978 missing values
+
+Remove the missing values in the data. 
+```{r}
+# Scatterplot matrix
+pisamath2 <- subset(pisamath, !is.na(acc))
+summary(pisamath2$acc)
+```
+
+2.	Make a scatterplot matrix of the variables, with points coloured by Gender. Describe the association between the variables.
+
+```{r}
+# Scatterplot matrix
+ggpairs(pisamath2, mapping = aes(color = Gender, alpha = 0.5))
+```
+
+Both genders have similar distributions for all variables 
+All variables have a strong positive linear relationship between all pairs of 7 test scores. 
