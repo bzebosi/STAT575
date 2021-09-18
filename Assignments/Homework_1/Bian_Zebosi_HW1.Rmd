@@ -1,0 +1,327 @@
+---
+html_document:
+  pdf_document: default
+  html_notebook: default
+author: "Brian Zebosi"
+date: "9/17/2021"
+output:
+  html_document:
+    df_print: paged
+title: "STAT575_HW_1"
+---
+
+
+ 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+ 
+
+```{r, include= F}
+# Install Required Packages
+package_mult_bz <- function(packages){
+  not_installed_yet <- packages[!(packages %in% rownames(installed.packages()))]
+  if (any(not_installed_yet == TRUE)) {
+    install.packages(packages[not_installed_yet, dependencies = TRUE])
+  }
+  sapply(packages, require, character.only = TRUE)
+}
+
+packages <- c("reshape2" , "ggpubr" , "grid" , "multcomp" , "car" , "Rmisc", 
+              "ggsignif" , "readxl" , "dendsort" , "viridis" , "circlize" , "tidyverse",
+              "ComplexHeatmap", "emmeans" , "lme4" , "Matrix" , "lmerTest","matrixStats","Hmisc","GGally" )
+
+package_mult_bz(packages)
+```
+
+### Question_1.
+
+```{r}
+x_1<-matrix(c(2,-1,6,-2,5,1,6,5,1,9,2,8,5,8,
+            1,0,5,0,4,-2,3,3,-3,7,-4,1,0,1,
+            0,2,8,-1,9,7,6,6,-3,5,-5,6,3,5),nrow=7,byrow=F)
+```
+
+## 1a.
+
+```{r}
+# No. rows
+n<- nrow(x_1); n
+```
+
+```{r}
+# No. columns
+p<- ncol(x_1); p
+```
+
+## 1b.
+
+```{r}
+x_1[3,2]
+```
+
+## 1c.
+
+```{r}
+colMeans(x_1)
+```
+## 1d.
+
+```{r}
+cov(x_1)
+```
+
+## 1e.
+
+```{r}
+cor(x_1)
+```
+
+## 1f.
+
+```{r}
+t(x_1)
+```
+
+## 1g.
+
+```{r}
+scale(x_1)
+```
+
+## 1h. 
+
+```{r}
+cov(scale(x_1))
+```
+
+```{r}
+cor(scale(x_1))
+```
+
+
+The standardized Covariance matrix and correlation matrix are equal.
+
+
+### Question_2.
+
+
+```{r}
+liver.df <- read.csv("liver_enzymes.csv")
+```
+## 2a.
+
+```{r}
+colMeans(liver.df[,2:4])
+```
+## 2b. 
+
+```{r}
+cov(liver.df[,2:4])
+```
+
+## 2c. 
+
+```{r}
+cor(liver.df[,2:4])
+```
+In the correction matrix; x2 and x3, have significant postive correlations.
+
+
+## 2d 
+
+```{r}
+pairs(liver.df[,2:4], panel = panel.smooth, pch=19)
+```
+
+
+
+
+Not all pairwise relationships are linear. X1 - X3, and X1 - X2 relationships look curvilinear maybe due to outliers.
+
+## 2e. 
+
+```{r}
+det(cov(liver.df[,2:4]))
+```
+The generalized sample variance is large suggesting that there are variables with very large Eigenvalues.
+Large generalized sample variance suggests uncorrelated variables. 
+
+Generalized sample variance is a measure of the total variance, which determines the normal distribution. 
+
+## 2f. 
+
+```{r}
+sum(diag(cov(liver.df[,2:4])))
+```
+
+
+
+
+### Question_4
+
+```{r}
+cereal.df <- read.csv("cereal.csv")
+```
+
+## 4a. 
+
+```{r}
+cereal.df %>% group_by(manufacturer) %>% tally() -> tallies
+tallies
+```
+## 4b. 
+
+```{r}
+# before cleaning
+dim(cereal.df) 
+## after cleaning
+cereal.df %>% filter_if(is.numeric, all_vars(. >= 0)) %>% dim()
+```
+There are 12 cereals with missing information.
+
+Thus has (12/17) = 15.5% proportion. 
+
+## 4c.
+
+```{r}
+
+cereal.df %>% filter_if(is.numeric, all_vars(. >= 0)) -> cereal2.df
+divide_cups <- function(x, na.rm=T)(x/cereal2.df$cups)
+cereal2.df %>% select(-c(shelf,weight)) %>% 
+  mutate_if(is.numeric, divide_cups) -> cereal3.df
+cereal3.df %>% mutate(shelf = cereal2.df$shelf) -> cereal3.df
+head(cereal3.df)
+```
+## 4d.
+
+
+i).
+
+Highest numbers of calories per cup 
+
+```{r}
+cereal3.df$name[cereal3.df$calories==max(cereal3.df$calories)]
+```
+
+Lowest numbers of calories per cup 
+
+```{r}
+cereal3.df$name[cereal3.df$calories==min(cereal3.df$calories)]
+```
+
+
+ii).
+
+Highest numbers of vitamins per cup 
+
+```{r}
+cereal3.df$name[cereal3.df$vitamins==max(cereal3.df$vitamins)]
+```
+
+Lowest numbers of vitamins per cup 
+
+```{r}
+cereal3.df$name[cereal3.df$vitamins==min(cereal3.df$vitamins)]
+```
+
+iii).
+
+```{r}
+variable <- c("calories", "carbs", "fat","fiber", "sodium","potassium")
+cereal3.df %>% select(variable) %>% pairs(panel = panel.smooth)
+```
+
+
+
+The cereals that are outliers with respect to calories only are
+
+```{r}
+cereal3.df$name[cereal3.df$calories >300]
+```
+
+The cereals that is outlier with respect to carbs only is:
+
+
+```{r}
+cereal3.df$name[cereal3.df$carbs >50]
+```
+The cereals that is outliers with respect to both calories and carbs is:
+
+
+```{r}
+cereal3.df$name[cereal3.df$carbs >50 & cereal3.df$calories >300]
+```
+
+calories and potassium, carbs  and fiber, fat and potassium, calories and carbs, calories and fat, calories and fiber show a linear correlation
+
+
+iv)
+
+
+```{r}
+cereal3.df$shelf <- as.factor(cereal3.df$shelf)
+ggplot(cereal3.df, aes(y = sugar, x = as.factor(shelf), fill = as.factor(shelf))) + geom_boxplot() + theme_bw()
+```
+
+
+
+
+Distribution of sugar on shelf 3 had greater variation.  
+
+Distribution at shelf 1 was right skewed with low median i.e. lowest sugar per cur.
+
+Distribution of sugar on shelf 2 displayed small variation with outliers and also highest sugar per cup.
+
+
+
+v)
+
+
+```{r}
+
+ggplot(cereal3.df, aes(y = fiber, x = as.factor(shelf), fill = as.factor(shelf))) + geom_boxplot() + theme_bw()
+```
+
+
+
+
+
+Distribution of fiber per cup on shelf 3 is more variable and has the highest fibre per cup.  
+
+Distribution at shelf 1 was right skewed
+
+Distribution of sugar on shelf 2 displayed small variation with outliers and also lowest fibre per cup.
+
+
+vi)
+
+
+```{r}
+ggparcoord(cereal3.df, columns = 4:12, groupColumn ="shelf") + theme_bw()
+```
+
+
+
+Based on the parallel coordinate plot, shelf 1 have the highest content or healthier cereals than 2 and 3. 
+
+
+vii)
+
+
+```{r}
+cereal3_KG <- filter(cereal3.df, manufacturer =="K" | manufacturer =="G")
+
+ggparcoord(cereal3_KG, columns = 4:12, groupColumn ="manufacturer") + theme_bw()
+```
+
+
+
+
+Generally Kellogg Mills cereals have higher nutrition than General Mills cereals. 
+
+General mills have lower carbs content and higher fat content compared to Kellogg cereals.
+
+Kellogg mills have more fiber, protein, potassium. 
