@@ -1,0 +1,192 @@
+---
+title: "Lab Report 3"
+author: "Juan Panelo, Brian Zebosi, Matheus Dalsente Krause"
+date: "10/14/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)  
+```
+
+## STAT547: Lab8_Principal Component Analysis
+
+
+## Data on Ames Livability
+
+```{r}
+towns <- read.csv("towns2.csv")
+towns$ames <- 0
+towns$ames[52] <- 1
+```
+
+## Exercise 1
+
+Examine how the the ten ratings variables are correlated with the livability scores (the Score variable) given to the cities. Write a short summary of your findings. 
+
+
+```{r}
+library(ggplot2)
+library(reshape2)
+
+towns.melt <- melt(towns, id.vars = c(1:3, 14), measure.vars = 4:13)
+qplot(value, Score, data = towns.melt, geom = "point") +
+  facet_wrap(~ variable) +
+  labs(x = NULL)
+```
+
+
+
+
+```{r}
+cor(towns$Score, towns[, 4:13])
+```
+
+
+-- Climate and score are weakly positively correlated with correlation value of 0.197
+
+-- Diversions and score are moderately to strongly positively correlated with correlation value of 0.477
+
+-- Economic and score are moderately positively correlated with correlation value of 0.445 
+
+-- Education and score are moderately to strongly positively correlated with correlation value of 0.493
+
+-- Community and score are moderately to strongly positively correlated with correlation value of 0.51
+
+-- Health and score are moderately to strongly positively correlated with correlation value of 0.477
+
+-- House and score are weakly correlated with correlation value of 0.39
+
+-- Safety and score are weakly to moderately positively correlated with correlation value of 0.381.
+
+-- Transportation and score are moderately positively correlated with correlation value of 0.436.
+
+-- Urban and score are moderately positively correlated with correlation value of 0.245.
+
+
+
+
+## Exercise 2
+
+All the scores are measured on a scale of 0-100, so why is it still necessary to use the correlation matrix, or standardize the data, before doing a principla component analysis (PCA)? (Hint: Compute some summary statistics or make some plots.)
+
+
+```{r}
+library(GGally)
+ggpairs(towns[, 4:14], upper = list(continuous = wrap("cor", size = 2)),
+        lower = list(continuous = wrap("points", stroke = 0, size = .5)))
+```
+
+
+```{r}
+sapply(towns[, 3:13], sd)
+```
+
+
+```{r}
+qplot(variable, value, data = towns.melt, geom = "boxplot") +
+  labs(x = NULL, y = NULL)
+```
+
+
+
+-- All the data is measured on the scale because there is a difference in variance among the variables.
+
+-- For stance we standardize the data because Urban has larger  variance than the other variables. 
+
+-- Then, we need to use correlation matrix instead of covariance matrix
+
+
+
+## Exercise 3
+
+Present a summary of the PCA including the table of eigenvectors, a list of eigenvalues (variance), and cumulative percentage of total variance explained by the principal compontnes. (Be sure to make your output readable, eg rounding digits appropriately.) Make a scree plot.
+
+
+## a)	How many PCs would you need to use to explain 80% of the total variation?
+
+
+```{r}
+towns.pca <- prcomp(towns[, 3:13], scale. = T)
+summary(towns.pca)
+```
+
+-- We need 6 PCAs (0.81003 > 0.8),  because the first 6 PCAs explain 80% of the total variation
+
+
+
+b)	Explain how the Cumulative Proportion row of the summary of the PC was calculated.
+
+```{r}
+cumsum(towns.pca$sdev^2)/11
+```
+
+-- The Cumulative proportion was calculated by the first K eigenvalues divided by all(p=11) of the PC scores.
+
+
+
+
+## Exercise 4
+
+a)	Explain how the variables contribute to the first two principal components.
+
+
+```{r}
+round(towns.pca$rotation, 3)
+```
+
+--- the first PC is average of climate, house and urban minus the average of population, diversion, economic, education, community, safety, health, transportation. 
+
+
+--- second PC the average population, climate, education, safety and urban minus the average of economic and house. 
+
+
+b)	Using three pieces of information, where the elbow is in the scree plot, the proportion of total variation, and the interpretation of the PCs, make an argument for how many PCs would you recommend to summarise this data?
+
+
+```{r}
+qplot(1:11, towns.pca$sdev ^ 2, geom = c("point", "line"),
+      xlab = "No. of PCs", ylab = "Component Variance (eigenvalue)", main = "Scree Plot")
+```
+
+
+
+--- Would choose 3 or 4 PCAs because it explains about 58.9% and 67.1% respectively of the total variation and also keeps the dimension reduced. 
+
+
+## Exercise 5
+
+Compare the scores for the first principal component with the Score variable in the data (this is the rating the article gives for each city). Which city would be rated first using the Score variable? Which city would be rated first using the scores for the first principal component? (You could make a plot of the Score variable against PC1, and compute the correlation between the two variables.) 
+
+
+Which city would be rated first using the Score variable?
+
+```{r}
+head(towns$City[order(towns$Score, decreasing = T)])[1]
+```
+
+Which city would be rated first using the scores for the first principal component?
+
+```{r}
+head(towns$City[order(towns.pca$x[, 1], decreasing = T)])[1]
+```
+
+
+
+Do the two approaches give cities similar ratings? (You may need to multiple the scores for the first principal component by -1).
+
+
+
+
+```{r}
+qplot(towns$Score, -towns.pca$x[, 1], col = as.factor(towns$ames), asp = 1) +
+  labs(x = "Score", y = "negative PC1 score", color = "Ames")
+```
+
+
+```{r}
+cor(towns$Score, -towns.pca$x[, 1])
+```
+
+
+--- No two approaches give different ratings. However, there are 55% related. 
